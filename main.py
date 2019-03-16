@@ -29,11 +29,15 @@ def drop_if_present():
 
 
 def insert(object):
-    insert_sql = "INSERT INTO star_wars VALUES (%s);"
+    fields = ["id", "name", "height", "mass", "gender", "homeworld", "wiki", "image", "dateCreated", "dateDestroyed", "destroyedLocation", "creator",
+              "manufacturer", "model", "class", "sensorColor", "platingColor", "equipment", "born", "bornLocation", "died", "diedLocation",
+              "species", "hairColor", "eyeColor", "skinColor", "cybernetics", "affiliations", "masters", "apprentices", "formerAffiliations"]
+    insert_sql = "INSERT INTO star_wars(" + ', '.join(map(str, fields)) + ") VALUES (" + "%s, " * (len(fields)-1) + "%s" ");"
+    print(insert_sql)
     try:
         conn = psycopg2.connect(host=content[0], port=port, database=content[1], user=content[2], password=content[3])
         cur = conn.cursor()
-        cur.execute(insert_sql)
+        cur.execute(insert_sql, object)
         print("insert successful")
         cur.close()
         conn.commit()
@@ -50,13 +54,23 @@ def create_table():
     create_sql = """
     CREATE TABLE star_wars (
             id bigserial PRIMARY KEY,
-            _name text NOT NULL,
+            name text NOT NULL,
             height float,
             mass integer,
             gender text, 
             homeworld text,
             wiki text,
             image text,
+            dateCreated integer,
+            dateDestroyed integer,
+            destroyedLocation text,
+            creator text,
+            manufacturer text,
+            model text,
+            class text, 
+            sensorColor text,
+            platingColor text,
+            equipment text,
             born integer,
             bornLocation text,
             died integer,
@@ -96,8 +110,16 @@ if os.path.isfile(path):
     print("found file: " + path)
 
 with open(path) as json_file:
+    fields = ["id", "name", "height", "mass", "gender", "homeworld", "wiki", "image", "dateCreated", "dateDestroyed", "destroyedLocation", "creator",
+              "manufacturer", "model", "class", "sensorColor", "platingColor", "equipment", "born", "bornLocation", "died", "diedLocation",
+              "species", "hairColor", "eyeColor", "skinColor", "cybernetics", "affiliations", "masters", "apprentices", "formerAffiliations"]
     json_data = json.load(json_file)
     for items in json_data:
-        items_tuple = tuple(items.items())
-        print(len(items_tuple))
-        insert(items_tuple)
+        items_tuple = [None] * len(fields)
+        for key, value in items.items():
+            try:
+                index = fields.index(key)
+                items_tuple[index] = value
+            except(ValueError) as error:
+                print(error)
+        insert(tuple(items_tuple))
